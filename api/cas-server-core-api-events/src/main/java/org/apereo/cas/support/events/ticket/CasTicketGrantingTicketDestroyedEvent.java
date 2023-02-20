@@ -1,9 +1,11 @@
 package org.apereo.cas.support.events.ticket;
 
+import org.apereo.cas.support.events.dao.ClientInfoDTO;
 import org.apereo.cas.ticket.TicketGrantingTicket;
 
 import lombok.Getter;
 import lombok.ToString;
+import org.apereo.inspektr.common.web.ClientInfoHolder;
 
 /**
  * Concrete subclass of {@code AbstractCasEvent} representing single sign on session
@@ -19,6 +21,8 @@ public class CasTicketGrantingTicketDestroyedEvent extends AbstractCasTicketGran
 
     private static final long serialVersionUID = 584961303690286494L;
 
+    private final ClientInfoDTO clientInfoDTO;
+
     /**
      * Instantiates a new CAS sso session destroyed event.
      *
@@ -27,5 +31,6 @@ public class CasTicketGrantingTicketDestroyedEvent extends AbstractCasTicketGran
      */
     public CasTicketGrantingTicketDestroyedEvent(final Object source, final TicketGrantingTicket ticket) {
         super(source, ticket);
+        this.clientInfoDTO = new ClientInfoDTO(ClientInfoHolder.getClientInfo());
     }
 }
