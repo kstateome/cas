@@ -6,6 +6,7 @@ import org.apereo.cas.support.events.authentication.CasAuthenticationPolicyFailu
 import org.apereo.cas.support.events.authentication.CasAuthenticationTransactionFailureEvent;
 import org.apereo.cas.support.events.authentication.adaptive.CasRiskyAuthenticationDetectedEvent;
 import org.apereo.cas.support.events.dao.CasEvent;
+import org.apereo.cas.support.events.dao.ClientInfoDTO;
 import org.apereo.cas.support.events.ticket.CasTicketGrantingTicketCreatedEvent;
 import org.apereo.cas.support.events.ticket.CasTicketGrantingTicketDestroyedEvent;
 import org.apereo.cas.util.DateTimeUtils;
@@ -37,15 +38,15 @@ public class DefaultCasAuthenticationEventListener implements DefaultCasEventLis
     @NotNull
     private final CasEventRepository casEventRepository;
 
-    private static CasEvent prepareCasEvent(final AbstractCasEvent event) {
+    private static CasEvent prepareCasEvent(final AbstractCasEvent event, final ClientInfoDTO clientInfo) {
         val dto = new CasEvent();
         dto.setType(event.getClass().getCanonicalName());
         dto.putTimestamp(event.getTimestamp());
         val dt = DateTimeUtils.zonedDateTimeOf(Instant.ofEpochMilli(event.getTimestamp()));
         dto.setCreationTime(dt.toString());
 
-        val clientInfo = ClientInfoHolder.getClientInfo();
-        if (clientInfo != null) {
+
+        if (clientInfo != null && clientInfo.isInitialized()) {
             dto.putClientIpAddress(clientInfo.getClientIpAddress());
             dto.putServerIpAddress(clientInfo.getServerIpAddress());
             dto.putAgent(clientInfo.getUserAgent());
@@ -59,7 +60,7 @@ public class DefaultCasAuthenticationEventListener implements DefaultCasEventLis
 
     @Override
     public void handleCasTicketGrantingTicketCreatedEvent(final CasTicketGrantingTicketCreatedEvent event) throws Exception {
-        val dto = prepareCasEvent(event);
+        val dto = prepareCasEvent(event,event.getClientInfoDTO());
         dto.setCreationTime(event.getTicketGrantingTicket().getCreationTime().toString());
         dto.putEventId(MessageSanitizationUtils.sanitize(event.getTicketGrantingTicket().getId()));
         dto.setPrincipalId(event.getTicketGrantingTicket().getAuthentication().getPrincipal().getId());
@@ -68,7 +69,7 @@ public class DefaultCasAuthenticationEventListener implements DefaultCasEventLis
 
     @Override
     public void handleCasTicketGrantingTicketDeletedEvent(final CasTicketGrantingTicketDestroyedEvent event) throws Exception {
-        val dto = prepareCasEvent(event);
+        val dto = prepareCasEvent(event,event.getClientInfoDTO());
         dto.setCreationTime(event.getTicketGrantingTicket().getCreationTime().toString());
         dto.putEventId(MessageSanitizationUtils.sanitize(event.getTicketGrantingTicket().getId()));
         dto.setPrincipalId(event.getTicketGrantingTicket().getAuthentication().getPrincipal().getId());
@@ -77,7 +78,7 @@ public class DefaultCasAuthenticationEventListener implements DefaultCasEventLis
 
     @Override
     public void handleCasAuthenticationTransactionFailureEvent(final CasAuthenticationTransactionFailureEvent event) throws Exception {
-        val dto = prepareCasEvent(event);
+        val dto = prepareCasEvent(event,event.getClientInfoDTO());
         dto.setPrincipalId(event.getCredential().getId());
         dto.putEventId(CasAuthenticationPolicyFailureEvent.class.getSimpleName());
         this.casEventRepository.save(dto);
@@ -85,7 +86,7 @@ public class DefaultCasAuthenticationEventListener implements DefaultCasEventLis
 
     @Override
     public void handleCasAuthenticationPolicyFailureEvent(final CasAuthenticationPolicyFailureEvent event) throws Exception {
-        val dto = prepareCasEvent(event);
+        val dto = prepareCasEvent(event,event.getClientInfoDTO());
         dto.setPrincipalId(event.getAuthentication().getPrincipal().getId());
         dto.putEventId(CasAuthenticationPolicyFailureEvent.class.getSimpleName());
         this.casEventRepository.save(dto);
@@ -93,7 +94,7 @@ public class DefaultCasAuthenticationEventListener implements DefaultCasEventLis
 
     @Override
     public void handleCasRiskyAuthenticationDetectedEvent(final CasRiskyAuthenticationDetectedEvent event) throws Exception {
-        val dto = prepareCasEvent(event);
+        val dto = prepareCasEvent(event,event.getClientInfoDTO());
         dto.putEventId(event.getService().getName());
         dto.setPrincipalId(event.getAuthentication().getPrincipal().getId());
         this.casEventRepository.save(dto);

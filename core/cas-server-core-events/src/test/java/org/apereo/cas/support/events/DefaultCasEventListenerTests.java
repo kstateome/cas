@@ -28,11 +28,15 @@ import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.scheduling.annotation.AsyncConfigurer;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.security.auth.login.FailedLoginException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -84,6 +88,7 @@ public class DefaultCasEventListenerTests {
             CollectionUtils.wrap("error", new FailedLoginException()),
             CollectionUtils.wrap(CoreAuthenticationTestUtils.getCredentialsWithSameUsernameAndPassword()));
         applicationContext.publishEvent(event);
+        sleep();
         assertFalse(casEventRepository.load().findAny().isEmpty());
     }
 
@@ -93,6 +98,7 @@ public class DefaultCasEventListenerTests {
             CollectionUtils.wrap("error", new FailedLoginException()),
             CollectionUtils.wrap(CoreAuthenticationTestUtils.getCredentialsWithSameUsernameAndPassword()));
         applicationContext.publishEvent(event);
+        sleep();
         assertFalse(casEventRepository.load().findAny().isEmpty());
     }
 
@@ -101,6 +107,7 @@ public class DefaultCasEventListenerTests {
         val tgt = new MockTicketGrantingTicket("casuser");
         val event = new CasTicketGrantingTicketCreatedEvent(this, tgt);
         applicationContext.publishEvent(event);
+        sleep();
         assertFalse(casEventRepository.load().findAny().isEmpty());
     }
 
@@ -112,6 +119,7 @@ public class DefaultCasEventListenerTests {
                 CollectionUtils.wrap(CoreAuthenticationTestUtils.getCredentialsWithSameUsernameAndPassword())),
             CoreAuthenticationTestUtils.getAuthentication());
         applicationContext.publishEvent(event);
+        sleep();
         assertFalse(casEventRepository.load().findAny().isEmpty());
     }
 
@@ -122,6 +130,7 @@ public class DefaultCasEventListenerTests {
             CoreAuthenticationTestUtils.getRegisteredService(),
             new Object());
         applicationContext.publishEvent(event);
+        sleep();
         assertFalse(casEventRepository.load().findAny().isEmpty());
     }
 
@@ -130,6 +139,7 @@ public class DefaultCasEventListenerTests {
         val event = new CasTicketGrantingTicketDestroyedEvent(this,
             new MockTicketGrantingTicket("casuser"));
         applicationContext.publishEvent(event);
+        sleep();
         assertFalse(casEventRepository.load().findAny().isEmpty());
     }
     @Test
@@ -138,6 +148,7 @@ public class DefaultCasEventListenerTests {
         val event = new CasTicketGrantingTicketDestroyedEvent(this,
                 new MockTicketGrantingTicket("casuser"));
         applicationContext.publishEvent(event);
+        sleep();
         assertEquals("verify repo has 1 event",1,casEventRepository.load().collect(Collectors.toList()).size());
     }
 
@@ -147,6 +158,7 @@ public class DefaultCasEventListenerTests {
         val event = new CasTicketGrantingTicketDestroyedEvent(this,
                 new MockTicketGrantingTicket("casuser"));
         applicationContext.publishEvent(event);
+        sleep();
         val result = casEventRepository.load().collect(Collectors.toList()).get(0).getClientIpAddress();
         assertEquals(REMOTE_ADDR_IP ,result);
     }
@@ -170,6 +182,8 @@ public class DefaultCasEventListenerTests {
                 maxThread = currentThread;
             }
         }
+        //let all the events catchup.
+        Thread.sleep(5000L);
         val eventSize = casEventRepository.load().collect(Collectors.toList()).size();
         val numOfIp1s = casEventRepository.load().filter(e -> HttpServletRequestSimulation.IP1.equals(e.getClientIpAddress()))
                 .collect(Collectors.toList()).size();
@@ -187,11 +201,26 @@ public class DefaultCasEventListenerTests {
         SimpleCasEventRepository eventRepository = (SimpleCasEventRepository)  casEventRepository;
         eventRepository.clearEvents();
     }
+
+    private void sleep() {
+        try{
+            Thread.sleep(20L);
+        }catch (Exception e){
+            throw new RuntimeException("thread interrupted",e);
+        }
+    }
     @TestConfiguration(value = "EventTestConfiguration", proxyBeanMethods = false)
-    public static class EventTestConfiguration {
+    @EnableAsync
+    public static class EventTestConfiguration implements AsyncConfigurer {
         @Bean
         public CasEventRepository casEventRepository() {
             return new SimpleCasEventRepository(CasEventRepositoryFilter.noOp());
+        }
+        @Override
+        public Executor getAsyncExecutor() {
+            ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+            threadPoolTaskExecutor.initialize();
+            return threadPoolTaskExecutor;
         }
     }
 }

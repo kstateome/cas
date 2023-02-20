@@ -48,8 +48,5 @@ public class HttpServletRequestSimulation implements Callable<Integer> {
         val tgt = new MockTicketGrantingTicket("casuser");
         val event = new CasTicketGrantingTicketCreatedEvent(this, tgt);
         applicationContext.publishEvent(event);
-        int x = 0;
-        System.out.println(x);
-
     }
 }
