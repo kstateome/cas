@@ -2,11 +2,12 @@ package org.apereo.cas.support.events.authentication;
 
 import org.apereo.cas.authentication.Authentication;
 import org.apereo.cas.authentication.AuthenticationTransaction;
+import org.apereo.cas.support.events.dao.ClientInfoDTO;
 
 import lombok.Getter;
 import lombok.ToString;
-import org.apereo.cas.support.events.dao.ClientInfoDTO;
 import org.apereo.inspektr.common.web.ClientInfoHolder;
+
 
 import java.util.Map;
 

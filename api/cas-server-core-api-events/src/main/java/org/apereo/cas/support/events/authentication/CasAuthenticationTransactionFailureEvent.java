@@ -2,9 +2,9 @@ package org.apereo.cas.support.events.authentication;
 
 import org.apereo.cas.authentication.Credential;
 import org.apereo.cas.support.events.AbstractCasEvent;
+import org.apereo.cas.support.events.dao.ClientInfoDTO;
 
 import lombok.Getter;
-import org.apereo.cas.support.events.dao.ClientInfoDTO;
 import org.apereo.inspektr.common.web.ClientInfoHolder;
 
 import java.util.Collection;

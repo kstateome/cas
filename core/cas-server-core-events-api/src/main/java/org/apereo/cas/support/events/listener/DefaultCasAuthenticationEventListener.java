@@ -17,7 +17,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.apereo.inspektr.common.web.ClientInfoHolder;
 
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
@@ -60,7 +59,7 @@ public class DefaultCasAuthenticationEventListener implements DefaultCasEventLis
 
     @Override
     public void handleCasTicketGrantingTicketCreatedEvent(final CasTicketGrantingTicketCreatedEvent event) throws Exception {
-        val dto = prepareCasEvent(event,event.getClientInfoDTO());
+        val dto = prepareCasEvent(event, event.getClientInfoDTO());
         dto.setCreationTime(event.getTicketGrantingTicket().getCreationTime().toString());
         dto.putEventId(MessageSanitizationUtils.sanitize(event.getTicketGrantingTicket().getId()));
         dto.setPrincipalId(event.getTicketGrantingTicket().getAuthentication().getPrincipal().getId());
@@ -69,7 +68,7 @@ public class DefaultCasAuthenticationEventListener implements DefaultCasEventLis
 
     @Override
     public void handleCasTicketGrantingTicketDeletedEvent(final CasTicketGrantingTicketDestroyedEvent event) throws Exception {
-        val dto = prepareCasEvent(event,event.getClientInfoDTO());
+        val dto = prepareCasEvent(event, event.getClientInfoDTO());
         dto.setCreationTime(event.getTicketGrantingTicket().getCreationTime().toString());
         dto.putEventId(MessageSanitizationUtils.sanitize(event.getTicketGrantingTicket().getId()));
         dto.setPrincipalId(event.getTicketGrantingTicket().getAuthentication().getPrincipal().getId());
@@ -78,7 +77,7 @@ public class DefaultCasAuthenticationEventListener implements DefaultCasEventLis
 
     @Override
     public void handleCasAuthenticationTransactionFailureEvent(final CasAuthenticationTransactionFailureEvent event) throws Exception {
-        val dto = prepareCasEvent(event,event.getClientInfoDTO());
+        val dto = prepareCasEvent(event, event.getClientInfoDTO());
         dto.setPrincipalId(event.getCredential().getId());
         dto.putEventId(CasAuthenticationPolicyFailureEvent.class.getSimpleName());
         this.casEventRepository.save(dto);
@@ -86,7 +85,7 @@ public class DefaultCasAuthenticationEventListener implements DefaultCasEventLis
 
     @Override
     public void handleCasAuthenticationPolicyFailureEvent(final CasAuthenticationPolicyFailureEvent event) throws Exception {
-        val dto = prepareCasEvent(event,event.getClientInfoDTO());
+        val dto = prepareCasEvent(event, event.getClientInfoDTO());
         dto.setPrincipalId(event.getAuthentication().getPrincipal().getId());
         dto.putEventId(CasAuthenticationPolicyFailureEvent.class.getSimpleName());
         this.casEventRepository.save(dto);
@@ -94,7 +93,7 @@ public class DefaultCasAuthenticationEventListener implements DefaultCasEventLis
 
     @Override
     public void handleCasRiskyAuthenticationDetectedEvent(final CasRiskyAuthenticationDetectedEvent event) throws Exception {
-        val dto = prepareCasEvent(event,event.getClientInfoDTO());
+        val dto = prepareCasEvent(event, event.getClientInfoDTO());
         dto.putEventId(event.getService().getName());
         dto.setPrincipalId(event.getAuthentication().getPrincipal().getId());
         this.casEventRepository.save(dto);

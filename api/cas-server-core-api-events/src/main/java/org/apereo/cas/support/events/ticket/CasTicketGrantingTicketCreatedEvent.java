@@ -1,11 +1,15 @@
 package org.apereo.cas.support.events.ticket;
 
-import lombok.Getter;
+
 import org.apereo.cas.support.events.dao.ClientInfoDTO;
 import org.apereo.cas.ticket.TicketGrantingTicket;
 
+import lombok.Getter;
 import lombok.ToString;
 import org.apereo.inspektr.common.web.ClientInfoHolder;
+
+
+
 
 
 /**
