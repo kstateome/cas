@@ -80,8 +80,10 @@ public class ElectronicFenceConfiguration {
         @Bean
         @RefreshScope(proxyMode = ScopedProxyMode.DEFAULT)
         public AuthenticationRiskEvaluator authenticationRiskEvaluator(
-            final List<AuthenticationRequestRiskCalculator> ipAddressAuthenticationRequestRiskCalculators) {
-            return new DefaultAuthenticationRiskEvaluator(ipAddressAuthenticationRequestRiskCalculators);
+            final List<AuthenticationRequestRiskCalculator> ipAddressAuthenticationRequestRiskCalculators,
+            @Qualifier("casEventRepository") final CasEventRepository casEventRepository,
+            final CasConfigurationProperties casProperties) {
+            return new DefaultAuthenticationRiskEvaluator(ipAddressAuthenticationRequestRiskCalculators, casEventRepository, casProperties);
         }
     }
 
