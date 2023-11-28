@@ -200,13 +200,19 @@ public class GitServiceRegistry extends AbstractServiceRegistry {
     }
 
     private List<RegisteredService> parseGitObjectContentIntoRegisteredService(final GitRepository.GitObject obj) {
-        return this.registeredServiceSerializers
-            .stream()
-            .filter(s -> s.supports(obj.getContent()))
-            .map(s -> s.load(new StringReader(obj.getContent())))
-            .filter(Objects::nonNull)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList());
+        try {
+            return this.registeredServiceSerializers
+                .stream()
+                .filter(s -> s.supports(obj.getContent()))
+                .map(s -> s.load(new StringReader(obj.getContent())))
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        } catch (final Exception e) {
+            LOGGER.error("Error reading configuration file [{}]", obj.getPath());
+            LoggingUtils.error(LOGGER, e);
+        }
+        return new ArrayList<RegisteredService>(0);
     }
 
     private boolean writeRegisteredServiceToFile(final RegisteredService registeredService, final File file) {

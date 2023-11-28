@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 import java.time.ZonedDateTime;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -36,21 +37,22 @@ public class MongoDbCasEventRepository extends AbstractCasEventRepository {
 
     @Override
     public Stream<? extends CasEvent> load() {
-        return this.mongoTemplate.stream(new Query(), CasEvent.class, this.collectionName).stream();
+        return getCasEventStream(new Query());
     }
 
     @Override
     public Stream<? extends CasEvent> load(final ZonedDateTime dateTime) {
         val query = new Query();
         query.addCriteria(Criteria.where(CREATION_TIME_PARAM).gte(dateTime.toString()));
-        return this.mongoTemplate.stream(query, CasEvent.class, this.collectionName).stream();
+        return getCasEventStream(query);
+
     }
 
     @Override
     public Stream<? extends CasEvent> getEventsOfTypeForPrincipal(final String type, final String principal) {
         val query = new Query();
         query.addCriteria(Criteria.where(TYPE_PARAM).is(type).and(PRINCIPAL_ID_PARAM).is(principal));
-        return this.mongoTemplate.stream(query, CasEvent.class, this.collectionName).stream();
+        return getCasEventStream(query);
     }
 
     @Override
@@ -59,37 +61,45 @@ public class MongoDbCasEventRepository extends AbstractCasEventRepository {
                                                                   final ZonedDateTime dateTime) {
         val query = new Query();
         query.addCriteria(Criteria.where(TYPE_PARAM).is(type)
-            .and(PRINCIPAL_ID_PARAM).is(principal)
-            .and(CREATION_TIME_PARAM).gte(dateTime.toString()));
-        return this.mongoTemplate.stream(query, CasEvent.class, this.collectionName).stream();
+                .and(PRINCIPAL_ID_PARAM).is(principal)
+                .and(CREATION_TIME_PARAM).gte(dateTime.toString()));
+        return getCasEventStream(query);
+
+    }
+
+    private Stream<CasEvent> getCasEventStream(final Query query) {
+        try (val stream = this.mongoTemplate.stream(query, CasEvent.class, this.collectionName)){
+            val list = stream.stream().collect(Collectors.toList());
+            return list.stream();
+        }
     }
 
     @Override
     public Stream<? extends CasEvent> getEventsOfType(final String type) {
         val query = new Query();
         query.addCriteria(Criteria.where(TYPE_PARAM).is(type));
-        return this.mongoTemplate.stream(query, CasEvent.class, this.collectionName).stream();
+        return getCasEventStream(query);
     }
 
     @Override
     public Stream<? extends CasEvent> getEventsOfType(final String type, final ZonedDateTime dateTime) {
         val query = new Query();
         query.addCriteria(Criteria.where(TYPE_PARAM).is(type).and(CREATION_TIME_PARAM).gte(dateTime.toString()));
-        return this.mongoTemplate.stream(query, CasEvent.class, this.collectionName).stream();
+        return getCasEventStream(query);
     }
 
     @Override
     public Stream<? extends CasEvent> getEventsForPrincipal(final String id) {
         val query = new Query();
         query.addCriteria(Criteria.where(PRINCIPAL_ID_PARAM).is(id));
-        return this.mongoTemplate.stream(query, CasEvent.class, this.collectionName).stream();
+        return getCasEventStream(query);
     }
 
     @Override
     public Stream<? extends CasEvent> getEventsForPrincipal(final String principal, final ZonedDateTime dateTime) {
         val query = new Query();
         query.addCriteria(Criteria.where(PRINCIPAL_ID_PARAM).is(principal).and(CREATION_TIME_PARAM).gte(dateTime.toString()));
-        return this.mongoTemplate.stream(query, CasEvent.class, this.collectionName).stream();
+        return getCasEventStream(query);
     }
 
     @Override

@@ -2,9 +2,12 @@ package org.apereo.cas.api;
 
 import org.apereo.cas.authentication.Authentication;
 import org.apereo.cas.services.RegisteredService;
+import org.apereo.cas.support.events.dao.CasEvent;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * This is {@link AuthenticationRequestRiskCalculator}.
@@ -30,9 +33,11 @@ public interface AuthenticationRequestRiskCalculator {
      * @param authentication the authentication
      * @param service        the service
      * @param request        the request
+     * @param events         the events
      * @return the authentication risk score
      */
     AuthenticationRiskScore calculate(Authentication authentication,
                                       RegisteredService service,
-                                      HttpServletRequest request);
+                                      HttpServletRequest request,
+                                      Supplier<Stream<? extends CasEvent>> events);
 }
