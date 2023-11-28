@@ -33,8 +33,13 @@ import java.time.Instant;
 @Slf4j
 public class CasAuthenticationAuthenticationEventListener implements CasAuthenticationEventListener {
 
+    /**
+     * Repository to store event data.
+     */
     private final CasEventRepository casEventRepository;
-
+    /**
+     * Sanitizer to clean up event data.
+     */
     private final MessageSanitizer messageSanitizer;
 
     private static CasEvent prepareCasEvent(final AbstractCasEvent event, final ClientInfoDTO clientInfo) {

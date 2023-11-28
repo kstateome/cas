@@ -19,16 +19,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apereo.inspektr.audit.annotation.Audit;
+
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -43,8 +42,13 @@ import java.util.stream.Stream;
 @Getter
 @RequiredArgsConstructor
 public class DefaultAuthenticationRiskEvaluator implements AuthenticationRiskEvaluator {
+    /**
+     * The calculators.
+     */
     private final List<AuthenticationRequestRiskCalculator> calculators;
-
+    /**
+     * CAS event repository instance.
+     */
     private final CasEventRepository casEventRepository;
 
     /**
@@ -53,29 +57,30 @@ public class DefaultAuthenticationRiskEvaluator implements AuthenticationRiskEva
     private final CasConfigurationProperties casProperties;
 
     @Audit(action = AuditableActions.EVALUATE_RISKY_AUTHENTICATION,
-        actionResolverName = AuditActionResolvers.ADAPTIVE_RISKY_AUTHENTICATION_ACTION_RESOLVER,
-        resourceResolverName = AuditResourceResolvers.ADAPTIVE_RISKY_AUTHENTICATION_RESOURCE_RESOLVER)
+            actionResolverName = AuditActionResolvers.ADAPTIVE_RISKY_AUTHENTICATION_ACTION_RESOLVER,
+            resourceResolverName = AuditResourceResolvers.ADAPTIVE_RISKY_AUTHENTICATION_RESOURCE_RESOLVER)
     @Override
     public AuthenticationRiskScore eval(final Authentication authentication,
                                         final RegisteredService service,
                                         final HttpServletRequest request) {
 
         val activeCalculators = this.calculators
-            .stream()
-            .filter(BeanSupplier::isNotProxy)
-            .collect(Collectors.toList());
+                .stream()
+                .filter(BeanSupplier::isNotProxy)
+                .collect(Collectors.toList());
 
         if (activeCalculators.isEmpty()) {
             return new AuthenticationRiskScore(AuthenticationRequestRiskCalculator.HIGHEST_RISK_SCORE);
         }
 
-        val scores = activeCalculators;
+
         val principal = authentication.getPrincipal();
         val events = new Supplier<Stream<? extends CasEvent>>() {
             private List<? extends CasEvent> dataList = Collections.EMPTY_LIST;
+
             @Override
             public Stream<? extends CasEvent> get() {
-                if (dataList.isEmpty()){
+                if (dataList.isEmpty()) {
                     try (val stream = getCasTicketGrantingTicketCreatedEventsFor(principal.getId())) {
                         dataList = stream.collect(Collectors.toList());
                     }
@@ -83,7 +88,11 @@ public class DefaultAuthenticationRiskEvaluator implements AuthenticationRiskEva
                 return dataList.stream();
             }
         };
-        this.calculators.forEach(r -> scores.add(r.calculate(authentication, service, request, events)));
+        val scores = activeCalculators.stream()
+                .map(r -> r.calculate(authentication, service, request, events))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
         val sum = scores.stream().map(AuthenticationRiskScore::getScore)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

@@ -53,3 +53,4 @@ public abstract class BaseBucket4jThrottledRequestTests {
         assertTrue(response.containsHeader(BucketConsumer.HEADER_NAME_X_RATE_LIMIT_REMAINING));
     }
 }
+
