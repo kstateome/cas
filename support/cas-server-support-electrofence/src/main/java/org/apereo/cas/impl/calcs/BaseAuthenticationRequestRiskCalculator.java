@@ -7,7 +7,6 @@ import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.services.RegisteredService;
 import org.apereo.cas.support.events.CasEventRepository;
 import org.apereo.cas.support.events.dao.CasEvent;
-import org.apereo.cas.support.events.ticket.CasTicketGrantingTicketCreatedEvent;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +16,6 @@ import lombok.val;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -45,21 +42,24 @@ public abstract class BaseAuthenticationRequestRiskCalculator implements Authent
     @Override
     public final AuthenticationRiskScore calculate(final Authentication authentication,
                                                    final RegisteredService service,
-                                                   final HttpServletRequest request) {
-        val principal = authentication.getPrincipal();
-        val events = new Supplier<Stream<? extends CasEvent>>() {
-            @Override
-            public Stream<? extends CasEvent> get() {
-                return getCasTicketGrantingTicketCreatedEventsFor(principal.getId());
-            }
-        };
+                                                   final HttpServletRequest request,
+                                                   final Supplier<Stream<? extends CasEvent>> events) {
 
-        if (events.get().findAny().isEmpty()) {
+        if (containsEvents(events)) {
             return new AuthenticationRiskScore(HIGHEST_RISK_SCORE);
         }
         val score = new AuthenticationRiskScore(calculateScore(request, authentication, service, events));
         LOGGER.debug("Calculated authentication risk score by [{}] is [{}]", getClass().getSimpleName(), score);
         return score;
+    }
+
+    /**
+     * something to getEvents.
+     * @param events A stream
+     * @return a flag if there are events.
+     */
+    protected boolean containsEvents(final Supplier<Stream<? extends CasEvent>> events) {
+        return events.get().findAny().isEmpty();
     }
 
     /**
@@ -78,20 +78,7 @@ public abstract class BaseAuthenticationRequestRiskCalculator implements Authent
         return HIGHEST_RISK_SCORE;
     }
 
-    /**
-     * Gets cas ticket granting ticket created events.
-     *
-     * @param principal the principal
-     * @return the cas ticket granting ticket created events for
-     */
-    protected Stream<? extends CasEvent> getCasTicketGrantingTicketCreatedEventsFor(final String principal) {
-        val type = CasTicketGrantingTicketCreatedEvent.class.getName();
-        LOGGER.debug("Retrieving events of type [{}] for [{}]", type, principal);
 
-        val date = ZonedDateTime.now(ZoneOffset.UTC)
-            .minusDays(casProperties.getAuthn().getAdaptive().getRisk().getDaysInRecentHistory());
-        return casEventRepository.getEventsOfTypeForPrincipal(type, principal, date);
-    }
 
     /**
      * Calculate score based on events count big decimal.
