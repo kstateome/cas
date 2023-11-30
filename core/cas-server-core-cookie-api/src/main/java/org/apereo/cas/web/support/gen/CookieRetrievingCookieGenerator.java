@@ -168,13 +168,13 @@ public class CookieRetrievingCookieGenerator extends CookieGenerator implements 
             .filter(c -> StringUtils.equalsIgnoreCase(c.getName(), getCookieName()))
             .forEach(c -> Stream.of("/", getCookiePath(), StringUtils.appendIfMissing(getCookiePath(), "/"))
                 .forEach(path -> {
-                    c.setMaxAge(0);
-                    c.setPath(path);
-                    c.setSecure(isCookieSecure());
-                    c.setHttpOnly(isCookieHttpOnly());
-                    c.setComment(cookieGenerationContext.getComment());
-                    LOGGER.debug("Removing cookie [{}] with path [{}]", c.getName(), c.getPath());
-                    response.addCookie(c);
+                    val crm = new Cookie(c.getName(), c.getValue());
+                    crm.setMaxAge(0);
+                    crm.setPath(path);
+                    crm.setSecure(c.getSecure());
+                    crm.setHttpOnly(c.isHttpOnly());
+                    LOGGER.debug("Removing cookie [{}] with path [{}] and [{}]", crm.getName(), crm.getPath(), crm.getValue());
+                    response.addCookie(crm);
                 })));
     }
 
