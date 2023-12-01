@@ -48,7 +48,7 @@ public class CookieRetrievingCookieGenerator extends CookieGenerator implements 
      **/
     private final CookieValueManager casCookieValueManager;
     /**
-     * The cookieGeneration context;
+     * The cookieGeneration context.
      */
     private final CookieGenerationContext cookieGenerationContext;
 
@@ -165,8 +165,8 @@ public class CookieRetrievingCookieGenerator extends CookieGenerator implements 
                 }
             }
             return Optional.ofNullable(cookie)
-                .map(ck -> this.casCookieValueManager.obtainCookieValue(ck, request))
-                .orElse(null);
+                    .map(ck -> this.casCookieValueManager.obtainCookieValue(ck, request))
+                    .orElse(null);
         } catch (final Exception e) {
             LoggingUtils.warn(LOGGER, e);
         }
@@ -175,7 +175,7 @@ public class CookieRetrievingCookieGenerator extends CookieGenerator implements 
 
     @Override
     public void removeAll(final HttpServletRequest request, final HttpServletResponse response) {
-       Optional.ofNullable(request.getCookies()).ifPresent(cookies -> Arrays.stream(cookies)
+        Optional.ofNullable(request.getCookies()).ifPresent(cookies -> Arrays.stream(cookies)
                 .filter(cookie -> StringUtils.equalsIgnoreCase(cookie.getName(), getCookieName()))
                 .forEach(cookie ->
                         Stream
@@ -231,7 +231,7 @@ public class CookieRetrievingCookieGenerator extends CookieGenerator implements 
         if (cookie.getSecure() || (sameSiteResult.isPresent() && StringUtils.equalsIgnoreCase(sameSiteResult.get(), "none"))) {
             builder.append(" Secure;");
             LOGGER.trace("Marked cookie [{}] as secure as indicated by cookie configuration or "
-                + "the configured same-site policy set to [{}]", cookie.getName(), sameSitePolicy);
+                    + "the configured same-site policy set to [{}]", cookie.getName(), sameSitePolicy);
         }
         if (cookie.isHttpOnly()) {
             builder.append(" HttpOnly;");
@@ -241,8 +241,8 @@ public class CookieRetrievingCookieGenerator extends CookieGenerator implements 
         val setCookieHeaders = response.getHeaders("Set-Cookie");
         response.setHeader("Set-Cookie", value);
         setCookieHeaders.stream()
-            .filter(header -> !header.startsWith(cookie.getName() + '='))
-            .forEach(header -> response.addHeader("Set-Cookie", header));
+                .filter(header -> !header.startsWith(cookie.getName() + '='))
+                .forEach(header -> response.addHeader("Set-Cookie", header));
         return cookie;
     }
 }
