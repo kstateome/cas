@@ -1,7 +1,6 @@
 package org.apereo.cas.util;
 
 import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ClassInfo;
 import lombok.experimental.UtilityClass;
 import lombok.val;
 import org.springframework.lang.NonNull;
@@ -38,9 +37,9 @@ public class ReflectionUtils {
             .scan()) {
 
             if (superclass.isInterface()) {
-                return new ArrayList<>(scanResult.getClassesImplementing(superclass).loadClasses(superclass));
+                return new ArrayList<>(scanResult.getClassesImplementing(superclass).loadClasses(superclass, true));
             }
-            return new ArrayList<>(scanResult.getSubclasses(superclass).loadClasses(superclass));
+            return new ArrayList<>(scanResult.getSubclasses(superclass).loadClasses(superclass, true));
 
         }
     }
@@ -59,7 +58,7 @@ public class ReflectionUtils {
             .enableAnnotationInfo()
             .scan()) {
             return annotations.stream()
-                .map(annotation -> scanResult.getClassesWithAnnotation(annotation).loadClasses())
+                .map(annotation -> scanResult.getClassesWithAnnotation(annotation).loadClasses(true))
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
         }
@@ -82,7 +81,7 @@ public class ReflectionUtils {
                 .stream()
                 .filter(c -> c.getSimpleName().equalsIgnoreCase(simpleName))
                 .findFirst()
-                .map(ClassInfo::loadClass);
+                .map(c -> c.loadClass(true));
         }
     }
 }
